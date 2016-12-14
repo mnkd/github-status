@@ -1,0 +1,8 @@
+{
+  "slack": {
+    "channel": "#test",
+    "username": "xxxx",
+    "icon_emoji": ":ghost:",
+    "end_point": "https://hooks.slack.com/services/xxxx"
+  }
+}
