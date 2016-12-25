@@ -4,30 +4,35 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"os"
+	"os/user"
+	"path/filepath"
+
+	"github.com/m-nakada/slackposter"
 )
 
 type Config struct {
-	Slack []SlackConfig `json:"slack"`
-}
-
-type SlackConfig struct {
-	Channel   string `json:"channel"`
-	Username  string `json:"username"`
-	IconEmoji string `json:"icon_emoji"`
-	EndPoint  string `json:"end_point"`
+	SlackChannels []slackposter.Config `json:"channels"`
 }
 
 func NewConfig() (Config, error) {
 	var config Config
 
-	str, err := ioutil.ReadFile("config.json")
+	usr, err := user.Current()
 	if err != nil {
-		fmt.Println("Could not read config.json. ", err)
+		fmt.Fprintln(os.Stderr, "Could not get current user.", err)
+		return config, err
+	}
+
+	path := filepath.Join(usr.HomeDir, "/.config/slackposter/config.json")
+	str, err := ioutil.ReadFile(path)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "Could not read config.json. ", err)
 		return config, err
 	}
 
 	if err := json.Unmarshal(str, &config); err != nil {
-		fmt.Println("JSON Unmarshal Error:", err)
+		fmt.Fprintln(os.Stderr, "JSON Unmarshal Error:", err)
 		return config, err
 	}
 

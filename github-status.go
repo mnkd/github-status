@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/m-nakada/slackposter"
 )
 
 type App struct {
@@ -34,24 +36,24 @@ type GitHubStatus struct {
 	LastUpdated string `json:"last_updated"`
 }
 
-func (github *GitHubStatus) payload() Payload {
+func (github *GitHubStatus) payload() slackposter.Payload {
 	date := JSTDate(github.LastUpdated)
 	dateString := date.Format("2006-01-02 15:04")
-	var slackConfig SlackConfig = app.Config.Slack[slackConfigIndex]
+	var slackConfig slackposter.Config = app.Config.SlackChannels[slackConfigIndex]
 
-	var payload Payload
+	var payload slackposter.Payload
 	payload.Channel = slackConfig.Channel
 	payload.Username = "GitHub Status | " + github.Status
 	payload.IconEmoji = slackConfig.IconEmoji
 	payload.LinkNames = true
 
-	statusField := Field{
+	statusField := slackposter.Field{
 		Title: "Status",
 		Value: github.Status,
 		Short: true,
 	}
 
-	dateField := Field{
+	dateField := slackposter.Field{
 		Title: "Date",
 		Value: dateString,
 		Short: true,
@@ -74,14 +76,14 @@ func (github *GitHubStatus) payload() Payload {
 		return payload
 	}
 
-	attachment := Attachment{
+	attachment := slackposter.Attachment{
 		Fallback: mention + "GitHub Status: " + github.Status + " - https://status.github.com",
 		Text:     mention + "<https://status.github.com/|GitHub Status> : " + github.Status,
 		Color:    color,
-		Fields:   []Field{statusField, dateField},
+		Fields:   []slackposter.Field{statusField, dateField},
 	}
 
-	payload.Attachments = []Attachment{attachment}
+	payload.Attachments = []slackposter.Attachment{attachment}
 
 	return payload
 }
@@ -131,8 +133,8 @@ func (app *App) run() error {
 		return nil
 	}
 
-	slackConfig := app.Config.Slack[slackConfigIndex]
-	slack := NewSlack(slackConfig)
+	slackConfig := app.Config.SlackChannels[slackConfigIndex]
+	slack := slackposter.NewSlack(slackConfig)
 	err = slack.PostPayload(payload)
 	return err
 }
@@ -144,7 +146,7 @@ func init() {
 
 	config, err := NewConfig()
 	if err != nil {
-		fmt.Println("error:", err)
+		fmt.Fprintln(os.Stderr, "error:", err)
 		os.Exit(1)
 	}
 	app.Config = config
@@ -152,7 +154,7 @@ func init() {
 
 func main() {
 	if err := app.run(); err != nil {
-		fmt.Println("error: ", err)
+		fmt.Fprintln(os.Stderr, "error: ", err)
 		os.Exit(1)
 	}
 }

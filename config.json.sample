@@ -1,5 +1,6 @@
 {
   "slack": {
+    "team": "team-name"
     "channel": "#test",
     "username": "xxxx",
     "icon_emoji": ":ghost:",
