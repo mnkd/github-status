@@ -9,7 +9,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/m-nakada/slackposter"
+	"github.com/mnkd/slackposter"
 )
 
 type App struct {

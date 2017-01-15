@@ -8,7 +8,7 @@ import (
 	"os/user"
 	"path/filepath"
 
-	"github.com/m-nakada/slackposter"
+	"github.com/mnkd/slackposter"
 )
 
 type Config struct {
