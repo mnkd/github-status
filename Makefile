@@ -1,5 +1,5 @@
 NAME     := github-status
-VERSION  := 0.1.0
+VERSION  := 1.0.0
 REVISION := $(shell git rev-parse --short HEAD)
 SRCS     := $(shell find . -type f -name '*.go')
 LDFLAGS  := -ldflags="-X \"main.Version=$(VERSION)\" -X \"main.Revision=$(REVISION)\""
