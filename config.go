@@ -8,14 +8,14 @@ import (
 	"os/user"
 	"path/filepath"
 
-	"github.com/mnkd/slackposter"
+	slack "github.com/mnkd/slackposter"
 )
 
 type Config struct {
 	SlackWebhook slack.Config `json:"slack_webhook"`
 }
 
-func NewConfig() (Config, error) {
+func NewConfig(path string) (Config, error) {
 	var config Config
 
 	usr, err := user.Current()
@@ -24,7 +24,18 @@ func NewConfig() (Config, error) {
 		return config, err
 	}
 
-	path := filepath.Join(usr.HomeDir, "/.config/slackposter/config.json")
+	// Decide config.json path
+	if len(path) == 0 {
+		path = filepath.Join(usr.HomeDir, "/.config/github-status/config.json")
+	} else {
+		p, err := filepath.Abs(path)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "Could not return absolute representation of path:", err, path)
+			return config, err
+		}
+		path = p
+	}
+
 	str, err := ioutil.ReadFile(path)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "Could not read config.json. ", err)
@@ -32,7 +43,7 @@ func NewConfig() (Config, error) {
 	}
 
 	if err := json.Unmarshal(str, &config); err != nil {
-		fmt.Fprintln(os.Stderr, "JSON Unmarshal Error:", err)
+		fmt.Fprintln(os.Stderr, "Unmarshal config.json error:", err)
 		return config, err
 	}
 
