@@ -12,7 +12,7 @@ import (
 )
 
 type Config struct {
-	SlackChannels []slackposter.Config `json:"channels"`
+	SlackWebhook slack.Config `json:"slack_webhook"`
 }
 
 func NewConfig() (Config, error) {
