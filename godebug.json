@@ -1,0 +1,9 @@
+{
+  "configurations": [
+    {
+      "name": "Debug",
+      "mode": "debug",
+      "args": ["-good"]
+    }
+  ]
+}
