@@ -1,0 +1,4 @@
+package: github.com/mnkd/github-status
+import:
+  - package: github.com/mnkd/slackposter
+  - package: github.com/pkg/errors
