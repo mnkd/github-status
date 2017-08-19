@@ -1,59 +1,47 @@
 package main
 
 import (
-	"encoding/json"
-	"flag"
-	"fmt"
-	"io/ioutil"
-	"net/http"
-	"os"
 	"time"
 
-	"github.com/mnkd/slackposter"
+	slack "github.com/mnkd/slackposter"
 )
 
-type App struct {
-	Config Config
-}
-
-var (
-	slackConfigIndex int
-	good             bool
-)
-
-var app = App{}
-var JST = time.FixedZone("JST", 3600*9)
-
-func JSTDate(dateString string) time.Time {
+func jstDate(dateString string) time.Time {
 	// 2016-10-04T13:40:42Z
 	utc, _ := time.Parse(time.RFC3339, dateString)
-	jst := utc.In(JST)
+	jst := utc.In(time.FixedZone("JST", 3600*9))
 	return jst
 }
 
+// GitHubStatus is represented GitHib Site Status.
 type GitHubStatus struct {
 	Status      string `json:"status"`
 	LastUpdated string `json:"last_updated"`
 }
 
-func (github *GitHubStatus) payload() slackposter.Payload {
-	date := JSTDate(github.LastUpdated)
-	dateString := date.Format("2006-01-02 15:04")
-	var slackConfig slackposter.Config = app.Config.SlackChannels[slackConfigIndex]
+// IsGood returns whether or not the github status is good.
+func (github *GitHubStatus) IsGood() bool {
+	return github.Status == "good"
+}
 
-	var payload slackposter.Payload
-	payload.Channel = slackConfig.Channel
+// BuildPayload returns a slack message payload from github status.
+func (github *GitHubStatus) BuildPayload(config slack.Config) slack.Payload {
+	date := jstDate(github.LastUpdated)
+	dateString := date.Format("2006-01-02 15:04")
+
+	var payload slack.Payload
+	payload.Channel = config.Channel
 	payload.Username = "GitHub Status | " + github.Status
-	payload.IconEmoji = slackConfig.IconEmoji
+	payload.IconEmoji = config.IconEmoji
 	payload.LinkNames = true
 
-	statusField := slackposter.Field{
+	statusField := slack.Field{
 		Title: "Status",
 		Value: github.Status,
 		Short: true,
 	}
 
-	dateField := slackposter.Field{
+	dateField := slack.Field{
 		Title: "Date",
 		Value: dateString,
 		Short: true,
@@ -76,85 +64,14 @@ func (github *GitHubStatus) payload() slackposter.Payload {
 		return payload
 	}
 
-	attachment := slackposter.Attachment{
+	attachment := slack.Attachment{
 		Fallback: mention + "GitHub Status: " + github.Status + " - https://status.github.com",
 		Text:     mention + "<https://status.github.com/|GitHub Status> : " + github.Status,
 		Color:    color,
-		Fields:   []slackposter.Field{statusField, dateField},
+		Fields:   []slack.Field{statusField, dateField},
 	}
 
-	payload.Attachments = []slackposter.Attachment{attachment}
+	payload.Attachments = []slack.Attachment{attachment}
 
 	return payload
-}
-
-func (app *App) status() (GitHubStatus, error) {
-	// Prepare HTTP Request
-
-	// https://status.github.com/api
-	// GET /api/status.json
-	// Returns the current system status--one of good (green), minor (yellow), or major (red)--and timestamp.
-
-	url := "https://status.github.com/api/status.json"
-	request, err := http.NewRequest("GET", url, nil)
-
-	// Fetch Request
-	client := &http.Client{}
-	response, err := client.Do(request)
-	if err != nil {
-		fmt.Println("Failure : ", err)
-	}
-
-	// Read Response Body
-	responseBody, _ := ioutil.ReadAll(response.Body)
-
-	// Decode JSON
-	var github GitHubStatus
-	if err := json.Unmarshal(responseBody, &github); err != nil {
-		fmt.Println("JSON Unmarshal error:", err)
-		return github, err
-	}
-
-	return github, nil
-}
-
-func (app *App) run() error {
-	status, err := app.status()
-	if err != nil {
-		return err
-	}
-	if good == false && status.Status == "good" {
-		return nil
-	}
-
-	payload := status.payload()
-
-	if len(payload.Attachments) == 0 {
-		return nil
-	}
-
-	slackConfig := app.Config.SlackChannels[slackConfigIndex]
-	slack := slackposter.NewSlack(slackConfig)
-	err = slack.PostPayload(payload)
-	return err
-}
-
-func init() {
-	flag.IntVar(&slackConfigIndex, "sci", 0, "Slack Config Index (default: 0)")
-	flag.BoolVar(&good, "good", false, "Post Good Status (default: false)")
-	flag.Parse()
-
-	config, err := NewConfig()
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "error:", err)
-		os.Exit(1)
-	}
-	app.Config = config
-}
-
-func main() {
-	if err := app.run(); err != nil {
-		fmt.Fprintln(os.Stderr, "error: ", err)
-		os.Exit(1)
-	}
 }
