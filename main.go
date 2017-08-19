@@ -6,30 +6,31 @@ import (
 	"os"
 )
 
+// Exit codes
 const (
 	ExitCodeOK int = iota
 	ExitCodeError
 )
 
 var (
-	Version  string
-	Revision string
+	version  string
+	revision string
 )
 
 var app = App{}
 
 func init() {
 	var path string
-	var version, good bool
+	var printVersion, good bool
 
-	flag.BoolVar(&version, "v", false, "prints current github-status version")
+	flag.BoolVar(&printVersion, "v", false, "prints current github-status version")
 	flag.StringVar(&path, "c", "", "/path/to/config.json (default: $HOME/.config/github-status/config.json)")
 	flag.BoolVar(&good, "good", false, "Post Good Status (default: false)")
 	flag.Parse()
 
-	if version {
-		fmt.Fprintln(os.Stdout, "Version:", Version)
-		fmt.Fprintln(os.Stdout, "Revision:", Revision)
+	if printVersion {
+		fmt.Fprintln(os.Stdout, "Version:", version)
+		fmt.Fprintln(os.Stdout, "Revision:", revision)
 		os.Exit(ExitCodeOK)
 	}
 

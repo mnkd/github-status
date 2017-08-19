@@ -10,7 +10,7 @@ import (
 	slack "github.com/mnkd/slackposter"
 )
 
-// App is
+// App is the application object.
 type App struct {
 	Good        bool
 	SlackConfig slack.Config
@@ -46,6 +46,7 @@ func (app *App) fetchStatus() (GitHubStatus, error) {
 	return github, nil
 }
 
+// Run invoke the App.
 func (app *App) Run() int {
 	status, err := app.fetchStatus()
 	if err != nil {

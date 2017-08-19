@@ -2,7 +2,7 @@ NAME     := github-status
 VERSION  := 1.0.0
 REVISION := $(shell git rev-parse --short HEAD)
 SRCS     := $(shell find . -type f -name '*.go')
-LDFLAGS  := -ldflags="-X \"main.Version=$(VERSION)\" -X \"main.Revision=$(REVISION)\""
+LDFLAGS  := -ldflags="-X \"main.version=$(VERSION)\" -X \"main.revision=$(REVISION)\""
 
 bin/$(NAME): $(SRCS) format
 	go build $(LDFLAGS) -o bin/$(NAME)

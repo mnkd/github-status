@@ -11,10 +11,12 @@ import (
 	slack "github.com/mnkd/slackposter"
 )
 
+// Config is the configuration.
 type Config struct {
 	SlackWebhook slack.Config `json:"slack_webhook"`
 }
 
+// NewConfig returns a new Config instance with config.json path.
 func NewConfig(path string) (Config, error) {
 	var config Config
 

@@ -13,15 +13,18 @@ func jstDate(dateString string) time.Time {
 	return jst
 }
 
+// GitHubStatus is represented GitHib Site Status.
 type GitHubStatus struct {
 	Status      string `json:"status"`
 	LastUpdated string `json:"last_updated"`
 }
 
+// IsGood returns whether or not the github status is good.
 func (github *GitHubStatus) IsGood() bool {
 	return github.Status == "good"
 }
 
+// BuildPayload returns a slack message payload from github status.
 func (github *GitHubStatus) BuildPayload(config slack.Config) slack.Payload {
 	date := jstDate(github.LastUpdated)
 	dateString := date.Format("2006-01-02 15:04")
