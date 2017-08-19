@@ -8,6 +8,7 @@ import (
 	"os"
 
 	slack "github.com/mnkd/slackposter"
+	"github.com/pkg/errors"
 )
 
 // App is the application object.
@@ -25,12 +26,15 @@ func (app *App) fetchStatus() (GitHubStatus, error) {
 
 	url := "https://status.github.com/api/status.json"
 	request, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return GitHubStatus{}, err
+	}
 
 	// Fetch Request
 	client := &http.Client{}
 	response, err := client.Do(request)
 	if err != nil {
-		fmt.Println("Failure : ", err)
+		return GitHubStatus{}, errors.Wrap(err, "HTTP request failed")
 	}
 
 	// Read Response Body
@@ -39,8 +43,7 @@ func (app *App) fetchStatus() (GitHubStatus, error) {
 	// Decode JSON
 	var github GitHubStatus
 	if err := json.Unmarshal(responseBody, &github); err != nil {
-		fmt.Println("JSON Unmarshal error:", err)
-		return github, err
+		return github, errors.Wrap(err, "failed to unmarshal response json")
 	}
 
 	return github, nil

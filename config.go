@@ -2,13 +2,12 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
-	"os"
 	"os/user"
 	"path/filepath"
 
 	slack "github.com/mnkd/slackposter"
+	"github.com/pkg/errors"
 )
 
 // Config is the configuration.
@@ -18,35 +17,30 @@ type Config struct {
 
 // NewConfig returns a new Config instance with config.json path.
 func NewConfig(path string) (Config, error) {
-	var config Config
-
 	usr, err := user.Current()
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "Could not get current user.", err)
-		return config, err
+		return Config{}, errors.Wrap(err, "failed user.Current()")
 	}
 
 	// Decide config.json path
 	if len(path) == 0 {
 		path = filepath.Join(usr.HomeDir, "/.config/github-status/config.json")
 	} else {
-		p, err := filepath.Abs(path)
-		if err != nil {
-			fmt.Fprintln(os.Stderr, "Could not return absolute representation of path:", err, path)
-			return config, err
+		p, absErr := filepath.Abs(path)
+		if absErr != nil {
+			return Config{}, errors.Wrapf(absErr, "failed filepath.Abs: %v", path)
 		}
 		path = p
 	}
 
 	str, err := ioutil.ReadFile(path)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "Could not read config.json. ", err)
-		return config, err
+		return Config{}, errors.Wrap(err, "read config.json")
 	}
 
+	var config Config
 	if err := json.Unmarshal(str, &config); err != nil {
-		fmt.Fprintln(os.Stderr, "Unmarshal config.json error:", err)
-		return config, err
+		return config, errors.Wrap(err, "failed to unmarshal config.json")
 	}
 
 	return config, nil
